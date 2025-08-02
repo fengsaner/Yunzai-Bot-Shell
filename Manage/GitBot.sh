@@ -1,5 +1,8 @@
 #!/bin/env bash
 
+# 定义GitHub镜像地址
+GitHubMirror="https://dir.fengsaner.xyz/"
+
 # 只保留GitHub的判断，移除Gitee相关配置
 if ping -c 1 github.com > /dev/null 2>&1
 then
@@ -8,7 +11,7 @@ then
 else
   # 使用新的镜像地址
   GitMirror="github.com"
-  URL="https://dir.fengsaner.xyz/https://raw.githubusercontent.com/fengsaner/Yunzai-Bot-Shell/master/Manage"
+  URL="${GitHubMirror}https://raw.githubusercontent.com/fengsaner/Yunzai-Bot-Shell/master/Manage"
 fi
 
 install_Bot(){
