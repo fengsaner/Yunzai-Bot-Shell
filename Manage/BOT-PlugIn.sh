@@ -12,7 +12,7 @@ URL="https://ipinfo.io"
 Address=$(curl -sL ${URL} | sed -n 's/.*"country": "\(.*\)",.*/\1/p')
 if [ "${Address}" = "CN" ]
 then
-    GitHubMirror="https://mirrors.chenby.cn/"
+    GitHubMirror="https://dir.fengsaner.xyz/"
 fi
 
 if [ -d /usr/local/node/bin ];then

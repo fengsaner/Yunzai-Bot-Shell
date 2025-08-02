@@ -50,14 +50,8 @@ else
 fi
 }
 function MirrorCheck(){
-URL="https://ipinfo.io"
-Address=$(curl -sL ${URL} | sed -n 's/.*"country": "\(.*\)",.*/\1/p')
-if [ ${Address} = "CN" ]
-then
-    export GitMirror="gitee.com"
-else 
+    # 只使用GitHub镜像
     export GitMirror="raw.githubusercontent.com"
-fi
 }
 ##############################
 Runing(){
@@ -189,15 +183,15 @@ help
 exit
 ;;
 PI)
-bash <(curl -sL https://${GitMirror}/baihu433/Yunzai-Bot-Shell/raw/master/Manage/BOT-PlugIn.sh)
+bash <(curl -sL https://raw.githubusercontent.com/fengsaner/Yunzai-Bot-Shell/master/Manage/BOT-PlugIn.sh)
 exit
 ;;
 QS)
-bash <(curl -sL https://${GitMirror}/baihu433/Yunzai-Bot-Shell/raw/master/Manage/QSignServer.sh)
+bash <(curl -sL https://raw.githubusercontent.com/fengsaner/Yunzai-Bot-Shell/master/Manage/QSignServer.sh)
 exit
 ;;
 SWPKG)
-bash <(curl -sL https://${GitMirror}/baihu433/Yunzai-Bot-Shell/raw/master/Manage/BOT_INSTALL.sh)
+bash <(curl -sL https://raw.githubusercontent.com/fengsaner/Yunzai-Bot-Shell/master/Manage/BOT_INSTALL.sh)
 exit
 ;;
 YZ|Yunzai|Yunzai-Bot)
@@ -271,7 +265,6 @@ version_date=$(curl -sL ${VersionURL})
 new_version="$(echo ${version_date} | grep version | awk '{print $2}' )"
 if [ "${new_version}" != "${old_version}" ];then
     echo -e ${cyan}正在更新${background}
-    #echo -e https://${GitMirror}/baihu433/Yunzai-Bot-Shell/raw/master/Manage/Main.sh
     curl -o bh ${URL}
     if bash bh help > /dev/null 2>&1
     then
@@ -286,17 +279,10 @@ if [ "${new_version}" != "${old_version}" ];then
 fi
 }
 old_version="1.1.3"
-if ping -c 1 gitee.com > /dev/null 2>&1
-then
-  VersionURL="https://gitee.com/baihu433/Yunzai-Bot-Shell/raw/master/version"
-  URL="https://gitee.com/baihu433/Yunzai-Bot-Shell/raw/master/Manage/Main.sh"
-  UPDATE
-elif ping -c 1 github.com > /dev/null 2>&1
-then
-  VersionURL="https://raw.githubusercontent.com/baihu433/Yunzai-Bot-Shell/master/version"
-  URL="https://raw.githubusercontent.com/baihu433/Yunzai-Bot-Shell/master/Manage/Main.sh"
-  UPDATE
-fi
+# 只使用GitHub的版本检查和更新
+VersionURL="https://raw.githubusercontent.com/fengsaner/Yunzai-Bot-Shell/master/version"
+URL="https://raw.githubusercontent.com/fengsaner/Yunzai-Bot-Shell/master/Manage/Main.sh"
+UPDATE
 ##############################
 function feedback(){
 if [ ! ${feedback} == "0" ];then
@@ -341,7 +327,6 @@ then
 fi
 }
 TmuxAttach(){
-#echo $TmuxName
 if ! tmux attach -t ${TmuxName} > /dev/null 2>&1
 then
   error=$(tmux attach -t ${TmuxName} 2>&1)
@@ -463,14 +448,8 @@ case $1 in
     fi
     ;;
   plugin)
-    URL="https://ipinfo.io"
-    Address=$(curl -sL ${URL} | sed -n 's/.*"country": "\(.*\)",.*/\1/p')
-    if [ ${Address} = "CN" ]
-    then
-        bash <(curl -sL https://mirrors.chenby.cn/https://raw.githubusercontent.com/baihu433/Yunzai-Bot-Shell/master/Manage/BOT-PlugIn.sh)
-    else 
-        bash <(curl -sL https://raw.githubusercontent.com/baihu433/Yunzai-Bot-Shell/master/Manage/BOT-PlugIn.sh)
-    fi
+    # 只使用GitHub的插件管理
+    bash <(curl -sL https://raw.githubusercontent.com/fengsaner/Yunzai-Bot-Shell/master/Manage/BOT-PlugIn.sh)
     ;;
 esac
 }
@@ -574,7 +553,7 @@ case ${Number} in
         ;;
     9)
         MirrorCheck
-        bash <(curl -sL https://${GitMirror}/baihu433/Yunzai-Bot-Shell/raw/master/Manage/OtherFunctions.sh)
+        bash <(curl -sL https://raw.githubusercontent.com/fengsaner/Yunzai-Bot-Shell/master/Manage/OtherFunctions.sh)
         ;;
     0)
         return
@@ -596,13 +575,8 @@ case $(uname -m) in
 esac
 command_all="BOT-PKG.sh BOT_INSTALL.sh BOT-NODE.JS.sh GitBot.sh"
 i=1
-if ping -c 1 gitee.com > /dev/null 2>&1
-then
-  URL="https://gitee.com/baihu433/Yunzai-Bot-Shell/raw/master/Manage"
-elif ping -c 1 github.com > /dev/null 2>&1
-then
-  URL="https://raw.githubusercontent.com/baihu433/Yunzai-Bot-Shell/master/Manage"
-fi
+# 只使用GitHub的安装脚本
+URL="https://raw.githubusercontent.com/fengsaner/Yunzai-Bot-Shell/master/Manage"
 for command in ${command_all}
 do
   until bash <(curl -sL ${URL}/${command})
@@ -661,7 +635,7 @@ case ${Number} in
         ;;
     3)
         MirrorCheck
-        URL="https://${GitMirror}/baihu433/Yunzai-Bot-Shell/raw/master/Manage"
+        URL="https://raw.githubusercontent.com/fengsaner/Yunzai-Bot-Shell/master/Manage"
         bash <(curl -sL ${URL}/QSignServer.sh)
         ;;
           0)
@@ -678,5 +652,3 @@ function mainbak()
     done
 }
 mainbak
-
-

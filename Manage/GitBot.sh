@@ -1,12 +1,14 @@
 #!/bin/env bash
-if ping -c 1 gitee.com > /dev/null 2>&1
-then
-  GitMirror="gitee.com"
-  URL="https://gitee.com/baihu433/Yunzai-Bot-Shell/raw/master/Manage"
-elif ping -c 1 github.com > /dev/null 2>&1
+
+# 只保留GitHub的判断，移除Gitee相关配置
+if ping -c 1 github.com > /dev/null 2>&1
 then
   GitMirror="github.com"
-  URL="https://raw.githubusercontent.com/baihu433/Yunzai-Bot-Shell/master/Manage"
+  URL="https://raw.githubusercontent.com/fengsaner/Yunzai-Bot-Shell/master/Manage"
+else
+  # 使用新的镜像地址
+  GitMirror="github.com"
+  URL="https://dir.fengsaner.xyz/https://raw.githubusercontent.com/fengsaner/Yunzai-Bot-Shell/master/Manage"
 fi
 
 install_Bot(){
