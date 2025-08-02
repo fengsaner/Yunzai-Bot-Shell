@@ -10,9 +10,9 @@ export background="\033[0m"
 
 # 检查必要工具
 ensure_deps() {
-    if ! dpkg -s xz-utils wget &> /dev/null; then
+    if ! dpkg -s xz-utils wget curl &> /dev/null; then
         echo -e ${yellow}安装必要工具...${background}
-        until apt install -y xz-utils wget
+        until apt install -y xz-utils wget curl
         do
             echo -e ${red}工具安装失败，3秒后重试${background}
             sleep 3s
@@ -46,7 +46,7 @@ check_node() {
     fi
 }
 
-# 从arm64专用链接安装
+# 从arm64专用链接安装Node.js
 install_node() {
     echo -e ${yellow}开始下载Node.js（arm64）：${NODE_URL}${background}
     i=1
@@ -54,7 +54,7 @@ install_node() {
     do
         if [ $i -ge 3 ]; then
             echo -e ${red}下载失败，尝试手动安装${background}
-            manual_install
+            manual_node_install
             return
         fi
         i=$((i+1))
@@ -72,17 +72,81 @@ install_node() {
         echo -e ${green}Node.js（arm64）安装成功：$(node -v)${background}
     else
         echo -e ${red}安装失败，尝试手动安装${background}
-        manual_install
+        manual_node_install
     fi
 }
 
-# 手动安装指引（arm64专用）
-manual_install() {
+# Node.js手动安装指引（arm64专用）
+manual_node_install() {
     echo -e ${white}=========================${background}
-    echo -e ${yellow}请执行以下步骤手动安装（arm64）：${background}
+    echo -e ${yellow}请执行以下步骤手动安装Node.js（arm64）：${background}
     echo -e 1. 下载文件：${NODE_URL}
     echo -e 2. 上传到当前目录
     echo -e 3. 运行命令：sudo tar -xJf ${NODE_FILE} -C /usr/local --strip-components=1
+    echo -e ${white}=========================${background}
+    exit 1
+}
+
+# 安装ffmpeg（修复404问题，使用多重备用链接）
+install_ffmpeg() {
+    local ffmpeg_file="ffmpeg-linux-arm64"
+    local ffprobe_file="ffprobe-linux-arm64"
+    
+    # 国内镜像备用链接列表（arm64专用）
+    local ffmpeg_mirrors=(
+        "https://npmmirror.com/mirrors/ffmpeg/release/${ffmpeg_file}"
+        "https://mirrors.tuna.tsinghua.edu.cn/ffmpeg/releases/${ffmpeg_file}"
+        "https://mirror.iscas.ac.cn/ffmpeg/releases/${ffmpeg_file}"
+    )
+    
+    # 尝试国内镜像下载
+    local success=0
+    for mirror in "${ffmpeg_mirrors[@]}"; do
+        echo -e ${yellow}尝试从镜像下载ffmpeg：${mirror}${background}
+        if wget -O ${ffmpeg_file} -c ${mirror}; then
+            # 同步下载ffprobe
+            wget -O ${ffprobe_file} -c $(echo ${mirror} | sed "s/ffmpeg/ffprobe/")
+            success=1
+            break
+        fi
+    done
+    
+    # 如果国内镜像失败，尝试官方静态编译版本
+    if [ $success -eq 0 ]; then
+        echo -e ${yellow}国内镜像失败，尝试官方静态版本${background}
+        local static_url="https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-arm64-static.tar.xz"
+        if wget -O ffmpeg.tar.xz -c ${static_url}; then
+            mkdir -p ffmpeg && tar -xJf ffmpeg.tar.xz -C ffmpeg --strip-components=1
+            mv ffmpeg/ffmpeg ${ffmpeg_file}
+            mv ffmpeg/ffprobe ${ffprobe_file}
+            rm -rf ffmpeg ffmpeg.tar.xz
+            success=1
+        fi
+    fi
+    
+    # 验证并安装
+    if [ $success -eq 1 ] && [ -f "${ffmpeg_file}" ] && [ -f "${ffprobe_file}" ]; then
+        chmod +x ${ffmpeg_file} ${ffprobe_file}
+        sudo mv -f ${ffmpeg_file} /usr/local/bin/ffmpeg
+        sudo mv -f ${ffprobe_file} /usr/local/bin/ffprobe
+        echo -e ${green}ffmpeg（arm64）安装成功${background}
+    else
+        echo -e ${red}ffmpeg下载失败，请手动安装${background}
+        manual_ffmpeg_install
+    fi
+}
+
+# ffmpeg手动安装指引
+manual_ffmpeg_install() {
+    echo -e ${white}=========================${background}
+    echo -e ${yellow}请执行以下步骤手动安装ffmpeg（arm64）：${background}
+    echo -e 1. 下载文件：https://npmmirror.com/mirrors/ffmpeg/release/ffmpeg-linux-arm64
+    echo -e 2. 下载文件：https://npmmirror.com/mirrors/ffmpeg/release/ffprobe-linux-arm64
+    echo -e 3. 上传到当前目录
+    echo -e 4. 运行命令：${background}
+    echo -e "   chmod +x ffmpeg-linux-arm64 ffprobe-linux-arm64"
+    echo -e "   sudo mv ffmpeg-linux-arm64 /usr/local/bin/ffmpeg"
+    echo -e "   sudo mv ffprobe-linux-arm64 /usr/local/bin/ffprobe"
     echo -e ${white}=========================${background}
     exit 1
 }
@@ -93,7 +157,7 @@ if ! check_node; then
     install_node
 fi
 
-# 其他工具安装（适配arm64）
+# 安装chromium（保持不变）
 if ! dpkg -s chromium-browser >/dev/null 2>&1
 then
     echo -e ${yellow}安装chromium浏览器（arm64）${background}
@@ -104,6 +168,7 @@ then
     done
 fi
 
+# 安装中文字体（保持不变）
 if ! dpkg -s fonts-wqy-zenhei fonts-wqy-microhei >/dev/null 2>&1
 then
     echo -e ${yellow}安装中文字体包${background}
@@ -114,26 +179,8 @@ then
     done
 fi
 
+# 安装ffmpeg（使用新的安装函数）
 if [ ! -x "/usr/local/bin/ffmpeg" ];then
-  if ping -c 1 gitee.com > /dev/null 2>&1
-  then
-    echo -e ${yellow}安装ffmpeg（arm64）${background}
-    ffmpeg_URL=https://registry.npmmirror.com/-/binary/ffmpeg-static/b6.0/
-    wget -O ffmpeg -c ${ffmpeg_URL}/ffmpeg-linux-arm64
-    wget -O ffprobe -c ${ffmpeg_URL}/ffprobe-linux-arm64
-    chmod +x ffmpeg ffprobe
-    mv -f ffmpeg /usr/local/bin/ffmpeg
-    mv -f ffprobe /usr/local/bin/ffprobe
-  else
-    if [ ! -d ffmpeg ];then
-      mkdir ffmpeg
-    fi
-    ffmpegURL=https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-arm64-static.tar.xz
-    wget -O ffmpeg.tar.xz -c ${ffmpegURL}
-    pv ffmpeg.tar.xz | tar -Jxf - -C ffmpeg
-    chmod +x ffmpeg/$(ls ffmpeg)/*
-    mv -f ffmpeg/$(ls ffmpeg)/ffmpeg /usr/local/bin/ffmpeg
-    mv -f ffmpeg/$(ls ffmpeg)/ffprobe /usr/local/bin/ffprobe
-    rm -rf ffmpeg*
-  fi
+    echo -e ${yellow}开始安装ffmpeg（arm64）${background}
+    install_ffmpeg
 fi
