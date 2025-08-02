@@ -21,15 +21,16 @@ ensure_deps() {
 }
 ensure_deps
 
-# 架构判断（仅支持x64，匹配提供的链接）
+# 架构判断（适配arm64/arch64）
 check_arch() {
-    if [[ $(uname -m) == "x86_64" || $(uname -m) == "amd64" ]]; then
-        ARCH="linux-x64"
-        NODE_URL="https://npmmirror.com/mirrors/node/v22.18.0/node-v22.18.0-linux-x64.tar.xz"
-        NODE_FILE="node-v22.18.0-linux-x64.tar.xz"
-        echo -e ${green}检测到x64架构，使用指定版本：v22.18.0${background}
+    if [[ $(uname -m) == "arm64" || $(uname -m) == "aarch64" ]]; then
+        ARCH="linux-arm64"
+        # arm64对应版本的Node.js链接（国内镜像，稳定）
+        NODE_URL="https://npmmirror.com/mirrors/node/v22.18.0/node-v22.18.0-linux-arm64.tar.xz"
+        NODE_FILE="node-v22.18.0-linux-arm64.tar.xz"
+        echo -e ${green}检测到arm64架构，使用指定版本：v22.18.0${background}
     else
-        echo ${red}当前架构$(uname -m)不匹配提供的x64版本${background}
+        echo ${red}当前架构$(uname -m)不匹配arm64${background}
         echo -e ${yellow}请手动下载对应架构的版本：https://npmmirror.com/mirrors/node/${background}
         exit 1
     fi
@@ -45,9 +46,9 @@ check_node() {
     fi
 }
 
-# 从指定链接安装
+# 从arm64专用链接安装
 install_node() {
-    echo -e ${yellow}开始下载Node.js：${NODE_URL}${background}
+    echo -e ${yellow}开始下载Node.js（arm64）：${NODE_URL}${background}
     i=1
     until wget -O ${NODE_FILE} -c ${NODE_URL}
     do
@@ -61,24 +62,24 @@ install_node() {
         sleep 3s
     done
 
-    # 安装
+    # 安装（适配arm64的解压路径）
     echo -e ${yellow}解压安装...${background}
     sudo tar -xJf ${NODE_FILE} -C /usr/local --strip-components=1
     rm -f ${NODE_FILE}
 
-    # 验证
+    # 验证安装
     if [ -x "$(command -v node)" ]; then
-        echo -e ${green}Node.js安装成功：$(node -v)${background}
+        echo -e ${green}Node.js（arm64）安装成功：$(node -v)${background}
     else
         echo -e ${red}安装失败，尝试手动安装${background}
         manual_install
     fi
 }
 
-# 手动安装指引（最终 fallback）
+# 手动安装指引（arm64专用）
 manual_install() {
     echo -e ${white}=========================${background}
-    echo -e ${yellow}请执行以下步骤手动安装：${background}
+    echo -e ${yellow}请执行以下步骤手动安装（arm64）：${background}
     echo -e 1. 下载文件：${NODE_URL}
     echo -e 2. 上传到当前目录
     echo -e 3. 运行命令：sudo tar -xJf ${NODE_FILE} -C /usr/local --strip-components=1
@@ -92,10 +93,10 @@ if ! check_node; then
     install_node
 fi
 
-# 其他工具安装（保持不变）
+# 其他工具安装（适配arm64）
 if ! dpkg -s chromium-browser >/dev/null 2>&1
 then
-    echo -e ${yellow}安装chromium浏览器${background}
+    echo -e ${yellow}安装chromium浏览器（arm64）${background}
     until bash <(curl -sL https://gitee.com/baihu433/chromium/raw/master/chromium.sh)
     do
         echo -e ${red}安装失败 3秒后重试${background}
@@ -116,10 +117,10 @@ fi
 if [ ! -x "/usr/local/bin/ffmpeg" ];then
   if ping -c 1 gitee.com > /dev/null 2>&1
   then
-    echo -e ${yellow}安装软件 ffmpeg${background}
+    echo -e ${yellow}安装ffmpeg（arm64）${background}
     ffmpeg_URL=https://registry.npmmirror.com/-/binary/ffmpeg-static/b6.0/
-    wget -O ffmpeg -c ${ffmpeg_URL}/ffmpeg-linux-x64
-    wget -O ffprobe -c ${ffmpeg_URL}/ffprobe-linux-x64
+    wget -O ffmpeg -c ${ffmpeg_URL}/ffmpeg-linux-arm64
+    wget -O ffprobe -c ${ffmpeg_URL}/ffprobe-linux-arm64
     chmod +x ffmpeg ffprobe
     mv -f ffmpeg /usr/local/bin/ffmpeg
     mv -f ffprobe /usr/local/bin/ffprobe
@@ -127,7 +128,7 @@ if [ ! -x "/usr/local/bin/ffmpeg" ];then
     if [ ! -d ffmpeg ];then
       mkdir ffmpeg
     fi
-    ffmpegURL=https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz
+    ffmpegURL=https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-arm64-static.tar.xz
     wget -O ffmpeg.tar.xz -c ${ffmpegURL}
     pv ffmpeg.tar.xz | tar -Jxf - -C ffmpeg
     chmod +x ffmpeg/$(ls ffmpeg)/*
