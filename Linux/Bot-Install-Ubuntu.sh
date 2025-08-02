@@ -14,6 +14,10 @@ then
 elif ping -c 1 github.com > /dev/null 2>&1
 then
   GitMirror="github.com"
+else
+  # 新增：处理镜像都不可用的情况
+  GitMirror="github.com"
+  echo -e ${yellow}警告：Gitee和GitHub均无法ping通，默认使用GitHub源${background}
 fi
 
 if ! dpkg -s xz-utils >/dev/null 2>&1
@@ -67,17 +71,29 @@ case $(uname -m) in
 esac
 
 function node_install(){
+# 修复1：使用正确的架构变量ARCH1
 if [ "${GitMirror}" == "gitee.com" ]
 then
     WebURL="https://mirrors.bfsu.edu.cn/nodejs-release/"
-    version3=$(curl ${WebURL} | grep ${version2} | grep -oP 'href=\K[^ ]+' | sed 's|"||g' | sed 's|/||g' | tail -n 1)
-    NodeJS_URL="https://registry.npmmirror.com/-/binary/node/latest-${version1}.x/node-${version3}-linux-${ARCH}.tar.xz"
+    # 修复2：优化版本提取逻辑，只匹配tar.xz包
+    version3=$(curl -s ${WebURL} | grep ${version2} | grep -oP 'href="\K[^"]+' | grep "linux-${ARCH1}.tar.xz" | head -n 1 | sed 's/.tar.xz//g')
+    NodeJS_URL="${WebURL}${version3}.tar.xz"
 elif [ "${GitMirror}" == "github.com" ]
 then
-    WebURL="https://nodejs.org/dist/latest-v18.x/"
-    version3=$(curl ${WebURL} | grep ${version2} | grep -oP 'href=\K[^ ]+' | awk -F'"' '{print $2}' | grep pkg  | sed 's|node-||g' | sed 's|.pkg||g')
-    NodeJS_URL="https://nodejs.org/dist/latest-${version1}.x/node-${version3}-linux-${ARCH}.tar.xz"
+    WebURL="https://nodejs.org/dist/latest-${version1}.x/"
+    # 修复2：优化版本提取逻辑，只匹配tar.xz包
+    version3=$(curl -s ${WebURL} | grep ${version2} | grep -oP 'href="\K[^"]+' | grep "linux-${ARCH1}.tar.xz" | head -n 1 | sed 's/.tar.xz//g')
+    NodeJS_URL="${WebURL}${version3}.tar.xz"
 fi
+
+# 修复3：检查URL是否有效
+if [ -z "${NodeJS_URL}" ] || ! curl -s --head ${NodeJS_URL} | grep -q "200 OK"; then
+    echo -e ${red}无法获取有效的Node.js下载链接${background}
+    exit 1
+fi
+
+# 修复4：初始化重试计数器
+i=1
 until wget -O node.tar.xz -c ${NodeJS_URL}
 do
     if [[ ${i} -eq 3 ]]
@@ -89,6 +105,17 @@ do
     echo -e ${red}安装失败 3秒后重试${background}
     sleep 3s
 done
+
+# 新增：解压并安装Node.js（原脚本缺失的关键步骤）
+echo -e ${yellow}正在解压Node.js${background}
+tar -xJf node.tar.xz -C /usr/local --strip-components=1
+rm -f node.tar.xz
+
+# 验证安装
+if ! command -v node &> /dev/null; then
+    echo -e ${red}Node.js安装失败${background}
+    exit 1
+fi
 }
 
 if ! [[ "$Nodsjs_Version" == "v16" || "$Nodsjs_Version" == "v18" ]];then
