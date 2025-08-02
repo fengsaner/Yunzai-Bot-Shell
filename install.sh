@@ -23,82 +23,84 @@ if [ "$(id -u)" != "0" ]; then
     echo -e ${red} 请使用root用户!${background}
     exit 0
 fi
+
 function Dependency(){
-InstallDependency(){
-echo -e ${green}正在安装必要依赖 dialog${background}
-if [ $(command -v apt) ];then
-    apt install -y dialog curl
-elif [ $(command -v dnf) ];then
-    dnf install -y dialog curl
-elif [ $(command -v yum) ];then
-    yum install -y dialog curl
-elif [ $(command -v pacman) ];then
-    pacman -S --noconfirm --needed dialog curl
-fi
-}
-if [ -x "$(command -v whiptail)" ];then
-    dialog_whiptail=whiptail
-elif [ -x "$(command -v dialog)" ];then
-    dialog_whiptail=dialog
-else
-    dialog_whiptail=dialog
-    InstallDependency
-fi
-if [ ! -x "$(command -v curl)" ];then
-    InstallDependency
-fi
+    InstallDependency(){
+        echo -e ${green}正在安装必要依赖 dialog${background}
+        if [ $(command -v apt) ];then
+            apt install -y dialog curl
+        elif [ $(command -v dnf) ];then
+            dnf install -y dialog curl
+        elif [ $(command -v yum) ];then
+            yum install -y dialog curl
+        elif [ $(command -v pacman) ];then
+            pacman -S --noconfirm --needed dialog curl
+        fi
+    }
+    if [ -x "$(command -v whiptail)" ];then
+        dialog_whiptail=whiptail
+    elif [ -x "$(command -v dialog)" ];then
+        dialog_whiptail=dialog
+    else
+        dialog_whiptail=dialog
+        InstallDependency
+    fi
+    if [ ! -x "$(command -v curl)" ];then
+        InstallDependency
+    fi
 }
 
 function SystemCheck(){
-if grep -q -E -i Arch /etc/issue && [ -x /usr/bin/pacman ];then
-    echo -e ${green}系统校验通过${background}
-elif grep -q -E -i Kernel /etc/issue && [ -x /usr/bin/dnf ];then
-    echo -e ${red}暂时放弃对centos的支持${background}
-    exit
-    echo -e ${green}系统校验通过${background}
-elif grep -q -E -i Kernel /etc/issue && [ -x /usr/bin/yum ];then
-    echo -e ${red}暂时放弃对centos的支持${background}
-    exit
-    echo -e ${green}系统校验通过${background}
-elif grep -q -E -i Ubuntu /etc/issue && [ -x /usr/bin/apt ];then
-    echo -e ${green}系统校验通过${background}
-elif grep -q -E -i Debian /etc/issue && [ -x /usr/bin/apt ];then
-    echo -e ${green}系统校验通过${background}
-elif grep -q -E -i Kali /etc/issue && [ -x /usr/bin/apt ];then
-    echo -e ${green}系统校验通过${background}
-elif grep -q -E -i Alpine /etc/os-release && [ -x /sbin/apk ];then
-    echo -e ${green}系统校验通过${background}
-elif grep -q -E -i Arch /etc/os-release && [ -x /usr/bin/pacman ];then
-    echo -e ${green}系统校验通过${background}
-elif grep -q -E -i CentOS /etc/os-release && [ -x /usr/bin/dnf ];then
-    echo -e ${red}暂时放弃对centos的支持${background}
-    exit
-    echo -e ${green}系统校验通过${background}
-elif grep -q -E -i CentOS /etc/os-release && [ -x /usr/bin/yum ];then
-    echo -e ${red}暂时放弃对centos的支持${background}
-    exit
-    echo -e ${green}系统校验通过${background}
-elif grep -q -E -i Ubuntu /etc/os-release && [ -x /usr/bin/apt ];then
-    echo -e ${green}系统校验通过${background}
-elif grep -q -E -i Debian /etc/os-release && [ -x /usr/bin/apt ];then
-    echo -e ${green}系统校验通过${background}
-elif grep -q -E -i Kali /etc/os-release && [ -x /usr/bin/apt ];then
-    echo -e ${green}系统校验通过${background}
-else
-    echo -e ${red}不受支持的系统${background}
-    echo -e ${red}程序终止!! 脚本停止运行${background}
-    exit
-fi
+    if grep -q -E -i Arch /etc/issue && [ -x /usr/bin/pacman ];then
+        echo -e ${green}系统校验通过${background}
+    elif grep -q -E -i Kernel /etc/issue && [ -x /usr/bin/dnf ];then
+        echo -e ${red}暂时放弃对centos的支持${background}
+        exit
+        echo -e ${green}系统校验通过${background}
+    elif grep -q -E -i Kernel /etc/issue && [ -x /usr/bin/yum ];then
+        echo -e ${red}暂时放弃对centos的支持${background}
+        exit
+        echo -e ${green}系统校验通过${background}
+    elif grep -q -E -i Ubuntu /etc/issue && [ -x /usr/bin/apt ];then
+        echo -e ${green}系统校验通过${background}
+    elif grep -q -E -i Debian /etc/issue && [ -x /usr/bin/apt ];then
+        echo -e ${green}系统校验通过${background}
+    elif grep -q -E -i Kali /etc/issue && [ -x /usr/bin/apt ];then
+        echo -e ${green}系统校验通过${background}
+    elif grep -q -E -i Alpine /etc/os-release && [ -x /sbin/apk ];then
+        echo -e ${green}系统校验通过${background}
+    elif grep -q -E -i Arch /etc/os-release && [ -x /usr/bin/pacman ];then
+        echo -e ${green}系统校验通过${background}
+    elif grep -q -E -i CentOS /etc/os-release && [ -x /usr/bin/dnf ];then
+        echo -e ${red}暂时放弃对centos的支持${background}
+        exit
+        echo -e ${green}系统校验通过${background}
+    elif grep -q -E -i CentOS /etc/os-release && [ -x /usr/bin/yum ];then
+        echo -e ${red}暂时放弃对centos的支持${background}
+        exit
+        echo -e ${green}系统校验通过${background}
+    elif grep -q -E -i Ubuntu /etc/os-release && [ -x /usr/bin/apt ];then
+        echo -e ${green}系统校验通过${background}
+    elif grep -q -E -i Debian /etc/os-release && [ -x /usr/bin/apt ];then
+        echo -e ${green}系统校验通过${background}
+    elif grep -q -E -i Kali /etc/os-release && [ -x /usr/bin/apt ];then
+        echo -e ${green}系统校验通过${background}
+    else
+        echo -e ${red}不受支持的系统${background}
+        echo -e ${red}程序终止!! 脚本停止运行${background}
+        exit
+    fi
 }
+
 function Script_Install(){
-echo -e ${green}正在获取版本信息${background}
-if [ -z "${GitMirror}" ];then
-  URL="https://ipinfo.io"
-  Address=$(curl ${URL} | sed -n 's/.*"country": "\(.*\)",.*/\1/p')
-  # 无论国内还是国外，统一使用GitHub源（移除重复逻辑）
-  GitMirror="raw.githubusercontent.com"
-  URL="https://raw.githubusercontent.com/fengsaner/Yunzai-Bot-Shell/master/version"
-fi
+    echo -e ${green}正在获取版本信息${background}
+    if [ -z "${GitMirror}" ];then
+        URL="https://ipinfo.io"
+        Address=$(curl ${URL} | sed -n 's/.*"country": "\(.*\)",.*/\1/p')
+        # 无论国内还是国外，统一使用GitHub源（移除重复逻辑）
+        GitMirror="raw.githubusercontent.com"
+        URL="https://raw.githubusercontent.com/fengsaner/Yunzai-Bot-Shell/master/version"
+    fi
     version_date=$(curl ${URL})
     version="$(echo ${version_date} | grep version | awk '{print $2}' )"
     date="$(echo ${version_date} | grep date | awk '{print $4}' )"
@@ -113,20 +115,19 @@ fi
     echo
     echo -e ${white}=========================${background}
     echo -e ${green}请选择安装途径${background}
-    echo -e ${green}1${cyan}\) Gitee${background}
-    echo -e ${green}2${cyan}\) Github${background}
+    echo -e ${green}1${cyan}\) Github${background}  # 已移除Gitee选项，统一指向GitHub
     echo -e ${white}=========================${background}
     echo -en ${green}请选择: ${background};read Choice
-   case ${Choice} in 
-    1)
-        export Git_Mirror=github
-        URL="https://raw.githubusercontent.com/fengsaner/Yunzai-Bot-Shell/master/Manage/Main.sh"
-        ;;
-    *)
-        echo -e ${red}输入错误${background}
-        exit
-        ;;
-esac
+    case ${Choice} in 
+        1)
+            export Git_Mirror=github
+            URL="https://raw.githubusercontent.com/fengsaner/Yunzai-Bot-Shell/master/Manage/Main.sh"
+            ;;
+        *)
+            echo -e ${red}输入错误${background}
+            exit
+            ;;
+    esac
     echo -e ${yellow} - ${cyan}正在安装${background}
     curl ${URL} > bh
     mv -f bh /usr/local/bin/bh
@@ -138,7 +139,6 @@ esac
         old_bh_bash='#!/bin/env bash'
         new_bh_bash=$(command -v bash)
         sed -i "s|${old_bh_bash}|#!${new_bh_bash}|g" /usr/local/bin/bh
-        #sed -i "s|'#!/bin/env bash'|#!$(command -v bash)|g" /usr/local/bin/bh
         if ! bh help > /dev/null 2>&1;then
             echo -e ${yellow} - ${red}解决失败${background}
             exit
@@ -148,19 +148,21 @@ esac
     echo -e ${yellow} - ${cyan}请使用 ${green}bh ${cyan}命令 打开脚本${background}
 }
 
-# echo -e ${white}"====="${green}白狐-Script${white}"====="${background}
-# echo -e ${cyan}白狐 Script ${green}是完全可信的。${background}
-# echo -e ${cyan}白狐 Script ${yellow}不会执行任何恶意命令${background}
-# echo -e ${cyan}白狐 Script ${yellow}不会执行任何恶意命令${background}
-# echo -e ${cyan}白狐 Script ${yellow}不会执行任何恶意命令${background}
-# echo -e ${cyan}如果您同意安装 请输入 ${green}同意安装${background}
-# echo -e ${cyan}注意：同意安装即同意本项目的用户协议${background}
-# echo -e ${cyan}用户协议链接: ${background}
-# echo -e ${cyan}https://gitee.com/baihu433/Yunzai-Bot-Shell/blob/master/Manage/用户协议.txt${background}
-# echo -e ${white}"=========================="${background}
-# echo -en ${green}请输入:${background};read yn
-# if [  "${yn}" == "同意安装" ]
-then
+# 用户协议确认部分（修正语法错误）
+echo -e ${white}"====="${green}白狐-Script${white}"====="${background}
+echo -e ${cyan}白狐 Script ${green}是完全可信的。${background}
+echo -e ${cyan}白狐 Script ${yellow}不会执行任何恶意命令${background}
+echo -e ${cyan}白狐 Script ${yellow}不会执行任何恶意命令${background}
+echo -e ${cyan}白狐 Script ${yellow}不会执行任何恶意命令${background}
+echo -e ${cyan}如果您同意安装 请输入 ${green}同意安装${background}
+echo -e ${cyan}注意：同意安装即同意本项目的用户协议${background}
+echo -e ${cyan}用户协议链接: ${background}
+echo -e ${cyan}https://raw.githubusercontent.com/fengsaner/Yunzai-Bot-Shell/master/Manage/用户协议.txt${background}  # 替换为GitHub地址
+echo -e ${white}"=========================="${background}
+echo -en ${green}请输入:${background};read yn
+
+# 修正if语句语法（添加空格和闭合fi）
+if [ "${yn}" == "同意安装" ]; then
     echo -e ${green}3秒后开始安装${background}
     sleep 2s
     SystemCheck
@@ -169,4 +171,4 @@ then
     Script_Install
 else
     echo -e ${red}程序终止!! 脚本停止运行${background}
-fi
+fi  # 新增闭合fi
