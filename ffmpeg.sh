@@ -99,7 +99,7 @@ echo -e ${blue}[${green}*${blue}] ${cyan}开始安装FFmpeg和FFprobe...${backgr
 
 # 使用GitHub源下载（移除了网络判断，默认使用此源）
 ARCH=$(Arch)
-FFmpegURL="https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-linux-${ARCH}-gpl.tar.xz"
+FFmpegURL="https://dir.fengsaner.xyz/https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-linux-${ARCH}-gpl.tar.xz"
 
 # 下载并解压
 if Download ffmpeg.tar.xz "${FFmpegURL}"
