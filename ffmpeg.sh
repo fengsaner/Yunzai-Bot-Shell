@@ -33,6 +33,7 @@ function Download(){
   
   DownloadStart(){
     echo -e ${blue}[${green}*${blue}] ${cyan}正在下载 ${yellow}${file}${cyan}${background}
+    echo -e ${blue}[${green}*${blue}] ${cyan}下载地址: ${yellow}${URL}${background}
     until ${Command}
     do
       if ! IncrementCounter
@@ -97,41 +98,74 @@ fi
 
 echo -e ${blue}[${green}*${blue}] ${cyan}开始安装FFmpeg和FFprobe...${background}
 
-# 使用GitHub源下载（移除了网络判断，默认使用此源）
+# 获取架构信息
 ARCH=$(Arch)
-FFmpegURL="https://dir.fengsaner.xyz/https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-linux-${ARCH}-gpl.tar.xz"
 
-# 下载并解压
-if Download ffmpeg.tar.xz "${FFmpegURL}"
-then
-  mkdir -p ffmpeg
-  # 检查pv是否存在，不存在则直接使用tar解压
-  if command -v pv > /dev/null 2>&1; then
-    pv ffmpeg.tar.xz | tar -Jxf - -C ffmpeg
-  else
-    tar -Jxf ffmpeg.tar.xz -C ffmpeg
-  fi
-  
-  # 处理解压后的文件
-  FFMPEG_DIR=$(find ffmpeg -maxdepth 1 -type d | tail -n 1)
-  if [ -n "${FFMPEG_DIR}" ] && [ -d "${FFMPEG_DIR}/bin" ]
-  then
-    chmod +x ${FFMPEG_DIR}/bin/*
-    if mv -f ${FFMPEG_DIR}/bin/ff* /usr/local/bin/
-    then
-      echo -e ${blue}[${green}*${blue}] ${cyan}安装完成.${background}
+# 定义主要下载源和备用下载源
+PRIMARY_URL="https://dir.fengsaner.xyz/https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-linux-${ARCH}-gpl.tar.xz"
+BACKUP_URL1="https://registry.npmmirror.com/-/binary/ffmpeg-static/b6.0/ffmpeg-linux-${ARCH}"
+BACKUP_URL2="https://cdn.npmmirror.com/binaries/ffmpeg-static/b6.0/ffmpeg-linux-${ARCH}"
+
+# 尝试从主要源下载
+if ! Download ffmpeg.tar.xz "${PRIMARY_URL}"; then
+  echo -e ${blue}[${yellow}*${blue}] ${cyan}尝试备用下载源1...${background}
+  # 尝试备用源1（单个文件版本）
+  if Download ffmpeg "${BACKUP_URL1}" && Download ffprobe "${BACKUP_URL1/ffmpeg/ffprobe}"; then
+    chmod +x ffmpeg ffprobe
+    if mv -f ffmpeg /usr/local/bin/ffmpeg && mv -f ffprobe /usr/local/bin/ffprobe; then
+      echo -e ${blue}[${green}*${blue}] ${cyan}从备用源1安装完成.${background}
+      exit 0
     else
       echo -e ${blue}[${red}*${blue}] ${cyan}移动文件失败，请检查权限.${background}
+      rm -f ffmpeg ffprobe
       exit 1
     fi
   else
-    echo -e ${blue}[${red}*${blue}] ${cyan}解压文件结构不符合预期.${background}
+    echo -e ${blue}[${yellow}*${blue}] ${cyan}尝试备用下载源2...${background}
+    # 尝试备用源2
+    if Download ffmpeg "${BACKUP_URL2}" && Download ffprobe "${BACKUP_URL2/ffmpeg/ffprobe}"; then
+      chmod +x ffmpeg ffprobe
+      if mv -f ffmpeg /usr/local/bin/ffmpeg && mv -f ffprobe /usr/local/bin/ffprobe; then
+        echo -e ${blue}[${green}*${blue}] ${cyan}从备用源2安装完成.${background}
+        exit 0
+      else
+        echo -e ${blue}[${red}*${blue}] ${cyan}移动文件失败，请检查权限.${background}
+        rm -f ffmpeg ffprobe
+        exit 1
+      fi
+    else
+      echo -e ${blue}[${red}*${blue}] ${cyan}所有下载源均失败，无法继续安装.${background}
+      exit 1
+    fi
+  fi
+fi
+
+# 处理从主要源下载的压缩包
+mkdir -p ffmpeg
+# 检查pv是否存在，不存在则直接使用tar解压
+if command -v pv > /dev/null 2>&1; then
+  pv ffmpeg.tar.xz | tar -Jxf - -C ffmpeg
+else
+  tar -Jxf ffmpeg.tar.xz -C ffmpeg
+fi
+
+# 处理解压后的文件
+FFMPEG_DIR=$(find ffmpeg -maxdepth 1 -type d | tail -n 1)
+if [ -n "${FFMPEG_DIR}" ] && [ -d "${FFMPEG_DIR}/bin" ]
+then
+  chmod +x ${FFMPEG_DIR}/bin/*
+  if mv -f ${FFMPEG_DIR}/bin/ff* /usr/local/bin/
+  then
+    echo -e ${blue}[${green}*${blue}] ${cyan}安装完成.${background}
+  else
+    echo -e ${blue}[${red}*${blue}] ${cyan}移动文件失败，请检查权限.${background}
     exit 1
   fi
-  
-  # 清理临时文件
-  rm -rf ffmpeg*
 else
-  echo -e ${blue}[${red}*${blue}] ${cyan}下载失败，无法继续安装.${background}
+  echo -e ${blue}[${red}*${blue}] ${cyan}解压文件结构不符合预期.${background}
   exit 1
 fi
+
+# 清理临时文件
+rm -rf ffmpeg*
+    
