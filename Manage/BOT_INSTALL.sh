@@ -7,7 +7,7 @@ then
   URL="https://raw.githubusercontent.com/fengsaner/Yunzai-Bot-Shell/master/Linux/Bot-Install-"
 else
   # GitHub访问失败时使用镜像地址
-  URL="https://dir.fengsaner.xyz/https://raw.githubusercontent.com/fengsaner/Yunzai-Bot-Shell/master/Linux/Bot-Install-"
+  URL="https://dir.fengsaner.top/https://raw.githubusercontent.com/fengsaner/Yunzai-Bot-Shell/master/Linux/Bot-Install-"
 fi
 Arch_Script="${URL}ArchLinux.sh"
 Kernel_Script="${URL}CentOS.sh"
