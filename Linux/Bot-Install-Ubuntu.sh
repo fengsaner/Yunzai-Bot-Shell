@@ -92,6 +92,38 @@ manual_node_install() {
     exit 1
 }
 
+# 安装 pnpm（新增）
+install_pnpm() {
+    if [ -x "$(command -v pnpm)" ]; then
+        echo -e ${green}已安装 pnpm：$(pnpm -v)${background}
+        return 0
+    fi
+
+    echo -e ${yellow}正在安装 pnpm...${background}
+    # 设置国内镜像加速
+    npm config set registry https://registry.npmmirror.com
+
+    # 优先使用 npm 全局安装
+    if npm install -g pnpm; then
+        echo -e ${green}pnpm 安装成功：$(pnpm -v)${background}
+        return 0
+    fi
+
+    # 兜底：使用 Node.js 自带的 corepack 启用 pnpm
+    echo -e ${yellow}npm 安装 pnpm 失败，尝试使用 corepack 启用...${background}
+    if command -v corepack >/dev/null 2>&1; then
+        corepack enable
+        corepack prepare pnpm@latest --activate
+        if [ -x "$(command -v pnpm)" ]; then
+            echo -e ${green}通过 corepack 启用 pnpm 成功：$(pnpm -v)${background}
+            return 0
+        fi
+    fi
+
+    echo -e ${red}pnpm 安装失败，请手动执行：npm install -g pnpm${background}
+    exit 1
+}
+
 # 安装 ffmpeg（支持 arm64 和 x86_64）
 install_ffmpeg() {
     local machine=$(uname -m)
@@ -149,6 +181,9 @@ if ! check_node; then
     check_arch
     install_node
 fi
+
+# 安装 pnpm（新增，必须在主面板调用 pnpm 之前执行）
+install_pnpm
 
 # 安装 chromium（保持不变）
 if ! dpkg -s chromium-browser >/dev/null 2>&1
